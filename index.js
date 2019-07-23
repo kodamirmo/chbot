@@ -1,8 +1,9 @@
 const SlackBot = require('slackbots');
 const axios = require('axios');
 const TOKEN = process.env.CLUBHOUSE_API_TOKEN;
+const STOKEN = process.env.SLACK_OAUTH_TOKEN;
 const bot = new SlackBot({
-  token : 'xoxb-138180247361-686443593746-OnX4W1a1dhvc3uHFQemzQci8',
+  token : STOKEN,
   name : 'chbot'
 });
 
@@ -33,10 +34,13 @@ function handleMessage(message) {
   if(message.includes(' in development')){
     getDevelopmentColumn()
   };
+
+  if(message.includes(' ready for review')){
+    getReadyForReviewColumn()
+  };
 };
 
 function getDevelopmentColumn() {
-  console.log('token',TOKEN)
   axios.get(`https://api.clubhouse.io/api/v2/search/stories?token=${TOKEN}`, {
     params : {
       "page_size" : 10,
@@ -46,7 +50,7 @@ function getDevelopmentColumn() {
       const data = res.data.data;
       console.log("TCL: getDevelopmentColumn -> data", data)
       const params = {
-        icon_emoji : ':squirrel:',
+        icon_emoji : ':computer:',
         mkdwn : true,
         attachments :  data.map(story => ({
           color : 'good',
@@ -66,6 +70,31 @@ function getDevelopmentColumn() {
     });
 }
 
-function getUnscheduledColumn() {
-  return console.log('unscheduled');
+function getReadyForReviewColumn() {
+  axios.get(`https://api.clubhouse.io/api/v2/search/stories?token=${TOKEN}`, {
+    params : {
+      "page_size" : 10,
+      "query" : "state:500000022"
+    }
+  }).then(res => {
+      const data = res.data.data;
+      const params = {
+        icon_emoji : ':squirrel:',
+        mkdwn : true,
+        attachments :  data.map(story => ({
+          color : 'good',
+          text : `*Name : ${story.name}* => assigned : ${story.owner_ids}`
+        })),
+      };
+
+      bot.postMessageToChannel(
+        'test',
+        `Ready for Review`,
+        params
+      );
+      
+    }).catch(function (error) {
+      // handle error
+      console.log(error);
+    });
 }
