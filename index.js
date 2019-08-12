@@ -7,18 +7,6 @@ const bot = new SlackBot({
   name : 'chbot'
 });
 
-bot.on('start', () => {
-  const params = {
-    icon_emoji : ':squirrel:',  
-  }
-
-  bot.postMessageToChannel(
-    'test',
-    'Averigua cómo van las tareas',
-    params
-  );
-});
-
 bot.on('error', (err) => console.log(err));
 
 bot.on('message', data => {
@@ -44,17 +32,18 @@ function getDevelopmentColumn() {
   axios.get(`https://api.clubhouse.io/api/v2/search/stories?token=${TOKEN}`, {
     params : {
       "page_size" : 10,
-      "query" : "state:500000018"
+      "query" : "state:500000018 !is:archived"
     }
   }).then(res => {
       const data = res.data.data;
       console.log("TCL: getDevelopmentColumn -> data", data)
+      
       const params = {
         icon_emoji : ':computer:',
         mkdwn : true,
         attachments :  data.map(story => ({
           color : 'good',
-          text : `*Name : ${story.name}* => assigned : ${story.owner_ids}`
+          text : `*Name : ${story.name}* => assigned : ${getNames(story.owner_ids)}`
         })),
       };
 
@@ -83,7 +72,7 @@ function getReadyForReviewColumn() {
         mkdwn : true,
         attachments :  data.map(story => ({
           color : 'good',
-          text : `*Name : ${story.name}* => assigned : ${story.owner_ids}`
+          text : `*Name : ${story.name}* => assigned : ${getNames(story.owner_ids)}`
         })),
       };
 
@@ -97,4 +86,20 @@ function getReadyForReviewColumn() {
       // handle error
       console.log(error);
     });
+}
+
+function getNames (ownerId) {
+    
+  switch (ownerId[0]) {
+    case '5a98dc8e-579c-4718-a9ea-c50f69ffee5a' :
+      return 'Irving';
+    case '5c3f6c1d-f9a1-4eec-b0a4-32fa060c691a' :
+      return 'Pamela';
+    case '5a997bf3-2258-4c94-957e-da00562ea49d' :
+      return 'Linda';
+    case '5a997ad4-89c4-45ac-863f-cf1da527ca8e' :
+      return 'Edgar';
+    default : 
+      return 'Not assigned';
+  }
 }
